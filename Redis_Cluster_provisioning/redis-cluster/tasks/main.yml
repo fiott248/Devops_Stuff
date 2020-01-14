@@ -1,0 +1,45 @@
+---
+ - name: Build Docker image from Dockerfile
+   docker_image:
+     name: redis_cluster
+     build:
+       path: /vagrant/redis-cluster-provisioning/files/redis_cluster
+       pull: false
+     source: build
+     state: present
+
+ - name: Create a network
+   docker_network:
+     name: "{{ redis_network }}"
+     ipam_config:
+      - subnet: "{{ network_subnet }}"
+
+ - name: Create Redis nodes
+   docker_container:
+     name: "{{ item.name }}"
+     image: redis:3.2
+     state: started
+     volumes:
+     - "{{ item.volume }}:/data"
+     - "{{ item.config }}:/usr/local/etc/redis"
+     ports:
+     - "{{ item.port }}"
+     command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+     networks:
+       - name: "{{ redis_network }}"
+         ipv4_address: "{{ item.ipv4 }}"
+   with_items:
+     - { name: redis-node_1, ipv4: "174.20.0.2", volume: "/home/vagrant/node1", port: "7000:7000", config: "/vagrant/redis-cluster-provisioning/files/redis_confs/conf1"}
+     - { name: redis-node_2, ipv4: "174.20.0.3", volume: "/home/vagrant/node2", port: "7001:7001", config: "/vagrant/redis-cluster-provisioning/files/redis_confs/conf2"}
+     - { name: redis-node_3, ipv4: "174.20.0.4", volume: "/home/vagrant/node3", port: "7002:7002", config: "/vagrant/redis-cluster-provisioning/files/redis_confs/conf3"}
+
+ - name: Create Redis cluster - build
+   docker_container:
+     name: redis_cluster
+     image: redis_cluster
+     state: started
+     ports:
+     - "6379:6379"
+     networks:
+       - name: "{{ redis_network }}"
+         ipv4_address: "{{ master_ip.cluster }}"

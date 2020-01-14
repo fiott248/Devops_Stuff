@@ -1,0 +1,10 @@
+---
+# vars file for .
+redis_network: redis_cluster_network
+network_subnet: 174.20.0.0/16
+docker:
+  restart_policy: on-failure
+  restart: unless-stopped
+  pull: always
+  state: started
+  configpath: /usr/local/etc/redis/redis.conf

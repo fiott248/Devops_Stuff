@@ -1,0 +1,54 @@
+---
+# tasks file for rabbitmq-cluster
+ - name: Build Docker image from Dockerfile
+   docker_image:
+     name: rabbitmq_cluster
+     build:
+       path: /vagrant/rabbitmq-cluster/files
+       pull: false
+     source: build
+     state: present
+
+ - name: Create rabbitmq nodes
+   docker_container:
+     name: rabbit1
+     hostname: rabbit1
+     image: rabbitmq_cluster
+     state: started
+     ports:
+     - "5672:5672"
+     - "15672:15672"
+     env:
+         RABBITMQ_DEFAULT_USER: "mquser"
+         RABBITMQ_DEFAULT_PASS: "mqpassword"
+         ERLANG_COOKIE: "abcdefg"
+
+ - name: Create rabbitmq nodes
+   docker_container:
+     name: rabbit2
+     hostname: rabbit2
+     image: rabbitmq_cluster
+     links:
+     - rabbit1
+     state: started
+     ports:
+     - "5673:5672"
+     - "15673:15672"
+     env:
+         ERLANG_COOKIE: "abcdefg"
+         CLUSTER_WITH: "rabbit1"
+
+ - name: Create rabbitmq nodes
+   docker_container:
+     name: rabbit3
+     hostname: rabbit3
+     image: rabbitmq_cluster
+     links:
+     - rabbit1
+     - rabbit2
+     state: started
+     ports:
+     - "5674:5672"
+     env:
+         ERLANG_COOKIE: "abcdefg"
+         CLUSTER_WITH: "rabbit1"

@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+
+  vars:
+    default_container_image: redis:3
+    build_container_image: redis_cluster
+    redis_network: redis_cluster_network
+    network_subnet: 174.20.0.0/16
+    master_ip:
+      cluster: 174.20.0.5
+    docker:
+      restart_policy: on-failure
+      restart: unless-stopped
+      pull: always
+      state: started
+      configpath: /usr/local/etc/redis
+
+  pre_tasks:
+    - name: Update apt cache if needed.
+      apt: update_cache=yes cache_valid_time=3600
+
+  roles:
+    - role: geerlingguy.docker
+
+  tasks:
+    - import_tasks: setup.yml
+    - import_tasks: ./tasks/main.yml
