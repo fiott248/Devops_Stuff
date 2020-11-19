@@ -1,0 +1,11 @@
+
+
+- name: deploy Docker Compose stack
+  docker_compose:
+    state: present
+    recreate: always
+    pull: yes
+    nocache: yes
+    project_src: "{{ project_path }}"
+    files:
+    - docker-compose.yml
